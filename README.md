@@ -58,3 +58,27 @@ void loop()
 }
 ```
 
+Now You can use `digitalOutput` like shown below:
+
+```C++
+	// switch output to active level
+	led.On();
+
+	// switch off after 5s
+	led.Off(5000);
+
+	// toggle led after 3s
+	led.Toggle(3000);
+
+	// blink led 10 times with 50ms duration after 5s
+	led.Blink(50, 10, 5000);
+
+	// change default active level to LOW, normally used once in setup to match board configuration 
+	led.SetOutputActiveLevel(false);
+
+	// On function cause LOW level on output pin
+	led.On();
+
+	// Off cause HIGH level on output pin
+	led.Off(5000);
+```
