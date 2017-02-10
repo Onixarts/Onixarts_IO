@@ -26,7 +26,7 @@
 
 using namespace Onixarts::Tools;
 
-IO::DigitalOutput led;
+IO::DigitalOutput led(LED_BUILTIN);
 
 // task manager executing OnTaskExecute function each 1000ms, running by default
 TaskManager::Manager<1> manager;
@@ -37,10 +37,9 @@ void setup()
 	Serial.begin(115200);
 	Serial.println("Onixarts IO blinker demo");
 
-	led.Init(LED_BUILTIN);
+	led.Init();
 
 	manager.AddTask(task1);
-	//	led.Blink(50,20,3000);
 }
 
 void loop()
