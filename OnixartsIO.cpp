@@ -108,3 +108,85 @@ bool DigitalOutput::IsActive()
 {
 	return digitalRead(m_outputPin) == m_outputActiveLevel;
 }
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+DigitalInput::DigitalInput(byte inputPin, bool enablePullUpResistor, byte inputActiveLevel)
+	: debouncingTask(this)
+	, m_inputPin(inputPin)
+	, m_enablePullUpResistor(enablePullUpResistor)
+	, m_inputActiveLevel(inputActiveLevel)
+	, inactiveState(this)
+	, pushedState(this)
+	, held400State(this)
+	, held1sState(this)
+	, held4sState(this)
+	, debouncingState(this)
+{
+}
+void DigitalInput::Init()
+{
+	pinMode(m_inputPin, m_enablePullUpResistor ? INPUT_PULLUP : INPUT);
+	AddTask(debouncingTask);
+	m_fsm.SetCurrentState(inactiveState);
+}
+
+void DigitalInput::Update()
+{
+	if (IsInputActive())
+		m_fsm.Notify(DigitalInputEvent::InputActive);
+	else 
+		m_fsm.Notify(DigitalInputEvent::InputInactive);
+	debouncingTask.Update(millis());
+}
+
+bool DigitalInput::IsInputActive()
+{
+	return digitalRead(m_inputPin) == m_inputActiveLevel;
+}
+
+//void DigitalInput::OnPressed() 
+//{
+//	Serial.println("Pressed");
+//}
+//void DigitalInput::OnReleased()
+//{
+//	Serial.println("released");
+//}
+//
+//void DigitalInput::OnReleasedBefore400ms()
+//{
+//	Serial.println("Released before 400ms");
+//}
+//
+//void DigitalInput::OnHeld400ms()
+//{
+//	Serial.println("Held 400");
+//}
+//
+//void DigitalInput::OnReleasedAfter400ms()
+//{
+//	Serial.println("released after 400 ms");
+//}
+//
+//void DigitalInput::OnHeld1s()
+//{
+//	Serial.println("Held 1s");
+//}
+//
+//void DigitalInput::OnReleasedAfter1s()
+//{
+//	Serial.println("released after 1s");
+//}
+//
+//void DigitalInput::OnHeld4s()
+//{
+//	Serial.println("Held 4s");
+//}
+//
+//void DigitalInput::OnReleasedAfter4s()
+//{
+//	Serial.println("released after 4s");
+//}
+

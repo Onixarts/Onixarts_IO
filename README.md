@@ -4,8 +4,11 @@ Input and output helper library for Arduino, simplify common IO tasks implementa
 
 ## Library dependencies
 - [Onixarts_TaskManager](https://github.com/Onixarts/Onixarts_TaskManager) - delivers delay and blink functions
+- [Onixarts_FSM](https://github.com/Onixarts/Onixarts_FSM) - finite state machine support for DigitalInput (button) class
 
-## Digital Output Features
+## Features
+
+#### Digital Output 
 
 - On, Off, Toggle, Blink functions
 - Configurable active level (LOW, HIGH)
@@ -13,9 +16,18 @@ Input and output helper library for Arduino, simplify common IO tasks implementa
 - No timer used (using millis())
 - Not suitable for high time precision tasks
 
+#### Digital Input (button)
+
+- Input debouncing (20ms default)
+- 9 events for button (pressed, released, released before 400ms, held for 400ms, released after 400ms, held for 1s, released after 1s, held for 4s, released after 4s)
+- Non-blocking time measure and debouncing
+- No timer used (using millis())
+- Configurable active input level (LOW, HIGH)
+- Configurable built-in pull-up resistor usage
 
 ## Basic usage
 
+### DigitalOutput
 See HelloWorld_DigitalOutput example for full code.
 
 Include main library and dependecies:
