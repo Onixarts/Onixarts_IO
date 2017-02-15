@@ -146,6 +146,18 @@ bool DigitalInput::IsInputActive()
 	return digitalRead(m_inputPin) == m_inputActiveLevel;
 }
 
+
+bool DigitalInput::IsPressed()
+{
+	Onixarts::Tools::FSM::State* state = m_fsm.GetCurrentState();
+	if (state == NULL)
+		return false;
+	if (state == &inactiveState || state == &debouncingState)
+		return false;
+
+	return true;
+}
+
 //void DigitalInput::OnPressed() 
 //{
 //	Serial.println("Pressed");

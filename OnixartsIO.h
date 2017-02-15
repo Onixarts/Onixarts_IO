@@ -247,6 +247,7 @@ namespace Onixarts
 				void Init();
 				void Update();
 
+				bool IsPressed();
 			};
 		}
 	} 
