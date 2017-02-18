@@ -112,17 +112,62 @@ bool DigitalOutput::IsActive()
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 
-DigitalInput::DigitalInput(byte inputPin, bool enablePullUpResistor, byte inputActiveLevel)
-	: debouncingTask(this)
-	, m_inputPin(inputPin)
+SimpleDigitalInput::SimpleDigitalInput(byte inputPin, bool enablePullUpResistor, byte inputActiveLevel)
+	: m_inputPin(inputPin)
 	, m_enablePullUpResistor(enablePullUpResistor)
 	, m_inputActiveLevel(inputActiveLevel)
-	, m_currentState(0)
+	, m_currentState(DigitalInputState::Inactive)
 {
 }
-void DigitalInput::Init()
+void SimpleDigitalInput::Init()
 {
 	pinMode(m_inputPin, m_enablePullUpResistor ? INPUT_PULLUP : INPUT);
+}
+
+void SimpleDigitalInput::Update()
+{
+	if (IsInputActive())
+	{
+		if (m_currentState == DigitalInputState::Inactive)
+		{
+			m_currentState = DigitalInputState::Pressed;
+		}
+	}
+	else
+	{
+		if (m_currentState >= DigitalInputState::Pressed)
+			Released();
+
+		if (m_currentState > DigitalInputState::Inactive)
+		{
+			m_currentState = DigitalInputState::Inactive;
+		}
+	}
+
+	if (m_currentState == DigitalInputState::Pressed)
+	{
+		Pressed();
+		m_currentState++;
+	}
+}
+
+bool SimpleDigitalInput::IsInputActive()
+{
+	return digitalRead(m_inputPin) == m_inputActiveLevel;
+}
+
+bool SimpleDigitalInput::IsPressed()
+{
+	return m_currentState > 1;
+}
+
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+
+DigitalInput::DigitalInput(byte inputPin, bool enablePullUpResistor, byte inputActiveLevel)
+	: debouncingTask(this)
+	, SimpleDigitalInput(inputPin, enablePullUpResistor, inputActiveLevel )
+{
 }
 
 void DigitalInput::Update()
@@ -194,12 +239,3 @@ void DigitalInput::Update()
 	debouncingTask.Update(millis());
 }
 
-bool DigitalInput::IsInputActive()
-{
-	return digitalRead(m_inputPin) == m_inputActiveLevel;
-}
-
-bool DigitalInput::IsPressed()
-{
-	return m_currentState > 1;
-}

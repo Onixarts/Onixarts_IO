@@ -112,13 +112,34 @@ namespace Onixarts
 				const byte Held4sAndHolding = 9;
 			}
 
-			class DigitalInput 
+			//-------------------------------------------------------------
+
+			class SimpleDigitalInput
 			{
 			protected:
 				byte m_inputPin;
 				bool m_enablePullUpResistor;
 				byte m_inputActiveLevel;
 				byte m_currentState;
+				//---------------------------------------------------------
+				void Pressed() { OnPressed(); };
+				void Released() { OnReleased(); };
+
+				virtual void OnPressed() {};
+				virtual void OnReleased() {};
+
+				bool IsInputActive();
+			public:
+				SimpleDigitalInput(byte inputPin, bool enablePullUpResistor = false, byte inputActiveLevel = HIGH);
+				void Init();
+				virtual void Update();
+
+				bool IsPressed();
+			};
+
+			class DigitalInput : public SimpleDigitalInput
+			{
+			protected:
 				//---------------------------------------------------------
 				BEGIN_TASK(DebouncingTask, 20, TaskManager::TaskState::Stopped, 1, DigitalInput);
 				void OnStop()
@@ -130,8 +151,6 @@ namespace Onixarts
 				}
 				END_TASK(debouncingTask)
 
-				void Pressed() { OnPressed(); };
-				void Released() { OnReleased(); };
 				void ReleasedBefore400ms() { OnReleasedBefore400ms(); };
 				void Held400ms() { OnHeld400ms(); };
 				void ReleasedAfter400ms() { OnReleasedAfter400ms(); };
@@ -140,8 +159,6 @@ namespace Onixarts
 				void Held4s() { OnHeld4s(); };
 				void ReleasedAfter4s() { OnReleasedAfter4s(); };
 
-				virtual void OnPressed() {};
-				virtual void OnReleased() {};
 				virtual void OnReleasedBefore400ms() {};
 				virtual void OnHeld400ms() {};
 				virtual void OnReleasedAfter400ms() {};
@@ -150,14 +167,12 @@ namespace Onixarts
 				virtual void OnHeld4s() {};
 				virtual void OnReleasedAfter4s() {};
 
-				bool IsInputActive();
 			public:
 				DigitalInput(byte inputPin, bool enablePullUpResistor = false, byte inputActiveLevel = HIGH);
-				void Init();
-				void Update();
-
-				bool IsPressed();
+				virtual void Update();
 			};
+
+
 		}
 	} 
 }
