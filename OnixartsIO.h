@@ -98,132 +98,41 @@ namespace Onixarts
 
 			// ----------------------------------------------------------------------------------------------
 
-			namespace DigitalInputEvent
+			namespace DigitalInputState
 			{
-				const byte InputActive = 1;
-				const byte InputInactive = 2;
-				//const byte TimoutActive = 3;
-				//const byte TimoutInactive = 4;
-				const byte Timeout = 5;
+				const byte Inactive = 0;
+				const byte Debouncing = 1;
+				const byte Pressed = 2;
+				const byte PressedAndHolding = 3;
+				const byte Held400ms = 4;
+				const byte Held400msAndHolding = 5;
+				const byte Held1s = 6;
+				const byte Held1sAndHolding = 7;
+				const byte Held4s = 8;
+				const byte Held4sAndHolding = 9;
 			}
 
-			class DigitalInput: public Onixarts::Tools::TaskManager::Manager<1>
+			class DigitalInput 
 			{
 			protected:
 				byte m_inputPin;
 				bool m_enablePullUpResistor;
 				byte m_inputActiveLevel;
-				Onixarts::Tools::FSM::Machine m_fsm;
+				byte m_currentState;
 				//---------------------------------------------------------
 				BEGIN_TASK(DebouncingTask, 20, TaskManager::TaskState::Stopped, 1, DigitalInput);
 				void OnStop()
 				{
 					if (GetParent().IsInputActive())
 					{
-						GetParent().m_fsm.Notify(DigitalInputEvent::Timeout);
+						GetParent().m_currentState++;
 					}
 				}
 				END_TASK(debouncingTask)
-				//---------------------------------------------------------
-				//---------------------------------------------------------
-				//---------------------------------------------------------
-				BEGIN_STATE(DigitalInput, InactiveState, 1)
-					TRANSITION(DigitalInputEvent::InputActive, debouncingState)
-				};
-				void OnEnter(byte event)
-				{
-					GetParent().debouncingTask.Stop();
-				}
-				END_STATE(inactiveState)
-				//---------------------------------------------------------
-				BEGIN_STATE(DigitalInput, DebouncingState, 2)
-					TRANSITION(DigitalInputEvent::Timeout, pushedState)
-					TRANSITION(DigitalInputEvent::InputInactive, inactiveState)
-				};
-				void OnEnter(byte event)
-				{
-					GetParent().debouncingTask.SetTaskInterval(20);
-					GetParent().debouncingTask.Restart();
-				}
-				END_STATE(debouncingState)
-				//---------------------------------------------------------
-				BEGIN_STATE(DigitalInput, PushedState, 2)
-					TRANSITION(DigitalInputEvent::Timeout, held400State)
-					TRANSITION(DigitalInputEvent::InputInactive, inactiveState)
-				};
-				void OnEnter(byte event)
-				{
-					GetParent().Pressed();
-					GetParent().debouncingTask.SetTaskInterval(400);
-					GetParent().debouncingTask.Restart();
-				}
-				void OnExit(byte event)
-				{
-					if (event == DigitalInputEvent::InputInactive)
-					{
-						GetParent().Released();
-						GetParent().ReleasedBefore400ms();
-					}
-				}
-				END_STATE(pushedState)
-				//---------------------------------------------------------
-				BEGIN_STATE(DigitalInput, Held400State, 2)
-					TRANSITION(DigitalInputEvent::Timeout, held1sState)
-					TRANSITION(DigitalInputEvent::InputInactive, inactiveState)
-				};
-				void OnEnter(byte event)
-				{
-					GetParent().Held400ms();
-					GetParent().debouncingTask.SetTaskInterval(600);
-					GetParent().debouncingTask.Restart();
-				}
-				void OnExit(byte event)
-				{
-					if (event == DigitalInputEvent::InputInactive)
-					{
-						GetParent().Released();
-						GetParent().ReleasedAfter400ms();
-					}
-				}
-				END_STATE(held400State)
-				//---------------------------------------------------------
-				BEGIN_STATE(DigitalInput, Held1sState, 2)
-					TRANSITION(DigitalInputEvent::InputInactive, inactiveState)
-					TRANSITION(DigitalInputEvent::Timeout, held4sState)
-				};
-				void OnEnter(byte event)
-				{
-					GetParent().Held1s();
-					GetParent().debouncingTask.SetTaskInterval(3000);
-					GetParent().debouncingTask.Restart();
-				}
-				void OnExit(byte event)
-				{
-					if (event == DigitalInputEvent::InputInactive)
-					{
-						GetParent().Released();
-						GetParent().ReleasedAfter1s();
-					}
-				}
-				END_STATE(held1sState)
-				//---------------------------------------------------------
-				BEGIN_STATE(DigitalInput, Held4sState, 1)
-					TRANSITION(DigitalInputEvent::InputInactive, inactiveState)
-				};
-				void OnEnter(byte event)
-				{
-					GetParent().Held4s();
-				}
-				void OnExit(byte event)
-				{
-					GetParent().Released();
-					GetParent().ReleasedAfter4s();
-				}
-				END_STATE(held4sState)
 
 				void Pressed() { OnPressed(); };
 				void Released() { OnReleased(); };
-				void ReleasedBefore400ms() { OnReleasedBefore400ms();  };
+				void ReleasedBefore400ms() { OnReleasedBefore400ms(); };
 				void Held400ms() { OnHeld400ms(); };
 				void ReleasedAfter400ms() { OnReleasedAfter400ms(); };
 				void Held1s() { OnHeld1s(); };
@@ -240,7 +149,7 @@ namespace Onixarts
 				virtual void OnReleasedAfter1s() {};
 				virtual void OnHeld4s() {};
 				virtual void OnReleasedAfter4s() {};
-				//virtual void OnStateChanged() {};
+
 				bool IsInputActive();
 			public:
 				DigitalInput(byte inputPin, bool enablePullUpResistor = false, byte inputActiveLevel = HIGH);

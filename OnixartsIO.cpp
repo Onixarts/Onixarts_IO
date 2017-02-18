@@ -117,27 +117,80 @@ DigitalInput::DigitalInput(byte inputPin, bool enablePullUpResistor, byte inputA
 	, m_inputPin(inputPin)
 	, m_enablePullUpResistor(enablePullUpResistor)
 	, m_inputActiveLevel(inputActiveLevel)
-	, inactiveState(this)
-	, pushedState(this)
-	, held400State(this)
-	, held1sState(this)
-	, held4sState(this)
-	, debouncingState(this)
+	, m_currentState(0)
 {
 }
 void DigitalInput::Init()
 {
 	pinMode(m_inputPin, m_enablePullUpResistor ? INPUT_PULLUP : INPUT);
-	AddTask(debouncingTask);
-	m_fsm.SetCurrentState(inactiveState);
 }
 
 void DigitalInput::Update()
 {
 	if (IsInputActive())
-		m_fsm.Notify(DigitalInputEvent::InputActive);
-	else 
-		m_fsm.Notify(DigitalInputEvent::InputInactive);
+	{
+		if( m_currentState == DigitalInputState::Inactive)
+		{
+			m_currentState++;
+			debouncingTask.SetTaskInterval(20);
+			debouncingTask.Restart();
+		}
+	}
+	else
+	{
+		switch (m_currentState)
+		{
+		case DigitalInputState::Pressed:
+		case DigitalInputState::PressedAndHolding:
+			Released();
+			ReleasedBefore400ms();
+			break;
+		case DigitalInputState::Held400ms:
+		case DigitalInputState::Held400msAndHolding:
+			Released();
+			ReleasedAfter400ms();
+			break;
+		case DigitalInputState::Held1s:
+		case DigitalInputState::Held1sAndHolding:
+			Released();
+			ReleasedAfter1s();
+			break;
+		case DigitalInputState::Held4s:
+		case DigitalInputState::Held4sAndHolding:
+			Released();
+			ReleasedAfter4s();
+		}
+		if (m_currentState > DigitalInputState::Inactive)
+		{
+			m_currentState = DigitalInputState::Inactive;
+			debouncingTask.Stop();
+		}
+	}
+
+	switch (m_currentState)
+	{
+	case DigitalInputState::Pressed:
+		Pressed();
+		debouncingTask.SetTaskInterval(400);
+		debouncingTask.Restart();
+		m_currentState++;
+		break;
+	case DigitalInputState::Held400ms:
+		Held400ms();
+		debouncingTask.SetTaskInterval(600);
+		debouncingTask.Restart();
+		m_currentState++;
+		break;
+	case DigitalInputState::Held1s:
+		Held1s();
+		debouncingTask.SetTaskInterval(3000);
+		debouncingTask.Restart();
+		m_currentState++;
+		break;
+	case DigitalInputState::Held4s:
+		Held4s();
+		m_currentState++;
+	}
 	debouncingTask.Update(millis());
 }
 
@@ -146,59 +199,7 @@ bool DigitalInput::IsInputActive()
 	return digitalRead(m_inputPin) == m_inputActiveLevel;
 }
 
-
 bool DigitalInput::IsPressed()
 {
-	Onixarts::Tools::FSM::State* state = m_fsm.GetCurrentState();
-	if (state == NULL)
-		return false;
-	if (state == &inactiveState || state == &debouncingState)
-		return false;
-
-	return true;
+	return m_currentState > 1;
 }
-
-//void DigitalInput::OnPressed() 
-//{
-//	Serial.println("Pressed");
-//}
-//void DigitalInput::OnReleased()
-//{
-//	Serial.println("released");
-//}
-//
-//void DigitalInput::OnReleasedBefore400ms()
-//{
-//	Serial.println("Released before 400ms");
-//}
-//
-//void DigitalInput::OnHeld400ms()
-//{
-//	Serial.println("Held 400");
-//}
-//
-//void DigitalInput::OnReleasedAfter400ms()
-//{
-//	Serial.println("released after 400 ms");
-//}
-//
-//void DigitalInput::OnHeld1s()
-//{
-//	Serial.println("Held 1s");
-//}
-//
-//void DigitalInput::OnReleasedAfter1s()
-//{
-//	Serial.println("released after 1s");
-//}
-//
-//void DigitalInput::OnHeld4s()
-//{
-//	Serial.println("Held 4s");
-//}
-//
-//void DigitalInput::OnReleasedAfter4s()
-//{
-//	Serial.println("released after 4s");
-//}
-
