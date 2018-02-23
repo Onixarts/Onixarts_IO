@@ -2,7 +2,7 @@
 //
 using namespace Onixarts::Tools::IO;
 
-DigitalOutput::DigitalOutput(byte outputPin, bool outputActiveLevelHigh = true)
+DigitalOutput::DigitalOutput(byte outputPin, bool outputActiveLevelHigh)
 	: m_outputPin(outputPin)
 	, m_outputActiveLevel(outputActiveLevelHigh ? HIGH : LOW)
 	, blinkingTask(this)
