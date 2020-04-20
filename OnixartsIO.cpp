@@ -13,6 +13,7 @@ DigitalOutput::DigitalOutput(byte outputPin, bool outputActiveLevelHigh)
 }
 void DigitalOutput::Init()
 {
+	digitalWrite(m_outputPin, !m_outputActiveLevel);
 	pinMode(m_outputPin, OUTPUT);
 
 	AddTask(blinkingTask);
