@@ -5,14 +5,15 @@ using namespace Onixarts::Tools::IO;
 DigitalOutput::DigitalOutput(byte outputPin, bool outputActiveLevelHigh)
 	: m_outputPin(outputPin)
 	, m_outputActiveLevel(outputActiveLevelHigh ? HIGH : LOW)
-	, blinkingTask(this)
-	, delayTask(this)
 	, m_isBlinkingModeEnabled(false)
 	, m_scheduledEvent(Event::None)
+	, blinkingTask(this)
+	, delayTask(this)
 {
 }
 void DigitalOutput::Init()
 {
+	digitalWrite(m_outputPin, !m_outputActiveLevel);
 	pinMode(m_outputPin, OUTPUT);
 
 	AddTask(blinkingTask);
@@ -165,8 +166,8 @@ bool SimpleDigitalInput::IsPressed()
 //---------------------------------------------------------------------------------------
 
 DigitalInput::DigitalInput(byte inputPin, bool enablePullUpResistor, byte inputActiveLevel)
-	: debouncingTask(this)
-	, SimpleDigitalInput(inputPin, enablePullUpResistor, inputActiveLevel )
+	: SimpleDigitalInput(inputPin, enablePullUpResistor, inputActiveLevel )
+	,debouncingTask(this)
 {
 }
 
